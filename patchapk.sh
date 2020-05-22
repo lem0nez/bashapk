@@ -20,8 +20,12 @@ shopt -s globstar nullglob
 
 main() {
   unset TRASH_DIR PATCH
+  DATA_DIR="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/data"
 
-  if [[ -z $1 ]]; then
+  if [[ ! -d $DATA_DIR ]]; then
+    echo >&2 'Could not find data directory!'
+    exit 1
+  elif [[ -z $1 ]]; then
     print_help
     exit 0
   fi
@@ -62,6 +66,12 @@ main() {
         exit 1
       fi
       rm_debug_info "$@" ;;
+    rm-ads)
+      if [[ -z $1 ]]; then
+        echo >&2 'Specify at least one root folder of the decompiled APK file!'
+        exit 1
+      fi
+      rm_ads "$@" ;;
     *)
       printf >&2 'Unrecognized patch: %s\n' "$PATCH"
       exit 1 ;;
@@ -78,8 +88,9 @@ print_help() {
       `'  -t, --trash [dir]    Set a directory for trash\n'`
       `'\n'`
       `'Patches:\n'`
-      `'  rm-debug-info [smali...]    Remove the debug information in\n'`
-      `'                              all files from the smali folder(s)\n' \
+      `'  rm-debug-info [smali...]    Remove the debugging information in\n'`
+      `'                              all files from the smali folder(s)\n'`
+      `'  rm-ads [APK root...]        Remove ads\n' \
       "$0"
 }
 
@@ -101,6 +112,28 @@ rm_debug_info() {
     fi
     shift
   done
+}
+
+rm_ads() {
+  mapfile -t rules < "$DATA_DIR/rm-ads/rules.list"
+  mapfile -t method < "$DATA_DIR/rm-ads/methods.list"
+
+  declare -A smali_patterns=(
+    ['invoke-.*Lcom/google/android/gms/(internal|ads).*;->addView\([^\)]*\)V']=`
+        `'invoke-static {}, LNoAds;->hook()V'
+  )
+
+  declare -A xml_patterns=(
+    ['<([^>]+)(android:id="@id/(?i)((ads?|banner|adview)_?layout)")([^>]+)'`
+        `'android:layout_width="[^"]+ent"([^>]+)android:layout_height="[^"]+ent"']=`
+        `'<\1\2\5android:layout_width="0dip"\6android:layout_height="0dip"'
+
+    ['<com\.google\.android\.gms\.ads\.AdView([^>]+)'`
+        `'android:layout_width="[^"]+ent"([^>]+)android:layout_height="[^"]+ent"']=`
+        `'<com.google.android.gms.ads.AdView\1android:layout_width="0dip"\2android:layout_height="0dip"'
+
+    ['ca-app-pub']='no-ads'
+  )
 }
 
 main "$@"
