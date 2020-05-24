@@ -122,9 +122,9 @@ rm_debug_info() {
 
 rm_ads() {
   declare -A xml_patterns=(
-    ['<([^>]+)(android:id="@id/((ads?|banner|adview)_?layout)")([^>]+)'`
+    ['<([^>]+)(android:id="@id/(ads?|banner|adview)_?layout")([^>]+)'`
         `'android:layout_width="[^"]+"([^>]+)android:layout_height="[^"]+"']=`
-        `'<\1\2\5android:layout_width="0.0dip"\6android:layout_height="0.0dip"'
+        `'<\1\2\4android:layout_width="0.0dip"\5android:layout_height="0.0dip"'
 
     ['<com\.google\.android\.gms\.ads\.AdView([^>]+)'`
         `'android:layout_width="[^"]+"([^>]+)android:layout_height="[^"]+"']=`

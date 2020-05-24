@@ -15,6 +15,8 @@ optimization process.
 With this script you can apply some of the following patches:
 - `rm-debug-info` removes debugging information from the `.smali`-files to
   reduce size of compiled DEX-file.
+- `rm-ads` removes ads. Original realisation by Maximoff
+  [here](https://github.com/Maximoff/ApkEditor-Patches).
 
 #### rmdupes
 Removes duplicate files from the specified directories. For example, if you have
