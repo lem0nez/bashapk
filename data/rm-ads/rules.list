@@ -16,7 +16,7 @@
 /altamob/
 /analytics.mopub.com/i/jot/exchange_client_event
 /api.pubnative.net/api/partner/v2/promotions/native/video
-/appAdForce/
+/appadforce/
 /appbrain/
 /appenda/
 /appia/
@@ -56,7 +56,7 @@
 /jirbo/
 /jumptap/
 /kochava/
-/Leadbolt/
+/leadbolt/
 /live.chartboost.com
 /localytics/
 /loopme/
@@ -74,7 +74,7 @@
 /moolah/
 /mopub/
 /my/target/
-/NativeInterstitial
+/nativeinterstitial
 /nexage/
 /onelouder/adlib/
 /openx/
@@ -88,7 +88,7 @@
 /sb-ssl.google.com/safebrowsing/clientreport/malware
 /settings.crashlytics.com/spi/v2/platforms/android/apps/%s/settings
 /shark/adsert/
-/smaato/SOMA/
+/smaato/soma/
 /smartadserver/
 /startapp/
 /startup.mobile.yandex.net/
@@ -103,14 +103,14 @@
 /xtify/android/sdk/
 /zestadz/android/
 ad.doubleclick.net
-ad/AdmobInterstitial
-ad/AdmobNative
-ads/FullAdmob
+ad/admobinterstitial
+ad/admobnative
+ads/fulladmob
 ca-app-pub
 doubleclick.net
 googleads
-InlineAd
-NativeAdViewAdmob
+inlinead
+nativeadviewadmob
 pagead/ads
 psm/advertising/
 ru/boxdigital/sdk/ad/

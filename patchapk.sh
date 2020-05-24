@@ -18,6 +18,12 @@
 set -eo pipefail
 shopt -s globstar nullglob
 
+TMP_FILE=$(mktemp -t tmp.patchapk-XXXXXX)
+cleanup() {
+  rm -f "$TMP_FILE"
+}
+trap cleanup EXIT
+
 main() {
   unset TRASH_DIR PATCH
   DATA_DIR="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/data"
@@ -115,25 +121,71 @@ rm_debug_info() {
 }
 
 rm_ads() {
-  mapfile -t rules < "$DATA_DIR/rm-ads/rules.list"
-  mapfile -t method < "$DATA_DIR/rm-ads/methods.list"
-
-  declare -A smali_patterns=(
-    ['invoke-.*Lcom/google/android/gms/(internal|ads).*;->addView\([^\)]*\)V']=`
-        `'invoke-static {}, LNoAds;->hook()V'
-  )
-
   declare -A xml_patterns=(
-    ['<([^>]+)(android:id="@id/(?i)((ads?|banner|adview)_?layout)")([^>]+)'`
-        `'android:layout_width="[^"]+ent"([^>]+)android:layout_height="[^"]+ent"']=`
-        `'<\1\2\5android:layout_width="0dip"\6android:layout_height="0dip"'
+    ['<([^>]+)(android:id="@id/((ads?|banner|adview)_?layout)")([^>]+)'`
+        `'android:layout_width="[^"]+"([^>]+)android:layout_height="[^"]+"']=`
+        `'<\1\2\5android:layout_width="0.0dip"\6android:layout_height="0.0dip"'
 
     ['<com\.google\.android\.gms\.ads\.AdView([^>]+)'`
-        `'android:layout_width="[^"]+ent"([^>]+)android:layout_height="[^"]+ent"']=`
-        `'<com.google.android.gms.ads.AdView\1android:layout_width="0dip"\2android:layout_height="0dip"'
+        `'android:layout_width="[^"]+"([^>]+)android:layout_height="[^"]+"']=`
+        `'<com.google.android.gms.ads.AdView\1'`
+        `'android:layout_width="0.0dip"\2android:layout_height="0.0dip"'
 
     ['ca-app-pub']='no-ads'
   )
+
+  # Rules list should contains only lowercase rows!
+  mapfile -t rules < "$DATA_DIR/rm-ads/rules.list"
+  mapfile -t methods < "$DATA_DIR/rm-ads/methods.list"
+
+  IFS='|' rules_pattern="(${rules[*]})"
+  strings_pattern="([^[:space:]\"]+\s*)\"[^\"]*${rules_pattern}[^\"]*\""
+  IFS='|' methods_pattern="invoke-.*(${methods[*]})\\(.*\\)(V|Z)"
+
+  while read -r f; do
+    if [[ -n $f ]]; then
+      # Just print a matched line.
+      grep -HiE "$strings_pattern" "$f"
+      sed -ri "s#$strings_pattern#\\1\"no-ads\"#Ig" "$f"
+    fi
+  done <<< "$(grep -rliE "$strings_pattern" "$1/smali"*)"
+
+  while read -r f; do
+    if [[ -z $f ]]; then
+      continue
+    fi
+
+    # Empty the temporary file.
+    : > "$TMP_FILE"
+    # IFS= prevents trimming of leading whitespaces.
+    while IFS= read -r l; do
+      # ${l,,} converts line to lowercase.
+      if [[ "${l,,}" =~ $rules_pattern && "$l" =~ $methods_pattern ]]; then
+        echo "$f:$l"
+        echo "$l" | sed -r \
+            "s#$methods_pattern#invoke-static {}, LNoAds;->hook()\\3#" >> \
+            "$TMP_FILE"
+        hooked=
+      else
+        echo "$l" >> "$TMP_FILE"
+      fi
+    done < "$f"
+    cat "$TMP_FILE" > "$f"
+  done <<< "$(grep -rlE "$methods_pattern" "$1/smali"*)"
+
+  for x in "${!xml_patterns[@]}"; do
+    while read -r f; do
+      if [[ -n $f ]]; then
+        grep -HiE "$x" "$f"
+        sed -ri "s#$x#${xml_patterns[$x]}#Ig" "$f"
+      fi
+    done <<< "$(grep -liE "$x" "$1/res/layout"*/*.xml)"
+  done
+
+  if [[ -n ${hooked+SET} ]]; then
+    # Add class that contains hooks.
+    cp -v "$DATA_DIR/rm-ads/NoAds.smali" "$1/smali"
+  fi
 }
 
 main "$@"
