@@ -17,6 +17,7 @@ With this script you can apply some of the following patches:
   reduce size of compiled DEX-file.
 - `rm-ads` removes ads. Original realisation by Maximoff
   [here](https://github.com/Maximoff/ApkEditor-Patches).
+- `rm-analytics` disables analytic reports.
 
 #### rmdupes
 Removes duplicate files from the specified directories. For example, if you have
