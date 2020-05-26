@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-rm_ads() {
+no_ads() {
   declare -A xml_patterns=(
     ['<([^>]+)(android:id="@id/(ads?|banner|adview)_?layout")([^>]+)'`
         `'android:layout_width="[^"]+"([^>]+)android:layout_height="[^"]+"']=`
@@ -28,30 +28,28 @@ rm_ads() {
   )
 
   # Rules list should contains only lowercase rows!
-  rules_pattern=$(get_list_pattern rm-ads/rules.list)
-  # The number signs should be escaped!
+  rules_pattern=$(get_list_pattern no-ads/rules.list)
   methods_pattern=`
-      `"invoke-.*$(get_list_pattern rm-ads/methods.list)\\(.*\\)(V|Z)"
+      `"invoke-.*$(get_list_pattern no-ads/methods.list)\\(.*\\)(V|Z)"
+  sed_methods_pattern=${methods_pattern//\//\\\/}
 
-  replace_strings "[^\"]*${rules_pattern}[^\"]*" no-ads false "$1/smali"*
+  replace_strings "[^\"]*${rules_pattern}[^\"]*" no-ads false "$1"/smali*
 
-  while read -r f; do
+  while IFS= read -r f; do
     if [[ -z $f ]]; then
       continue
     fi
 
     unset line_number file_changed
-    # Empty the temporary file.
     : > "$TMP_FILE"
 
-    # IFS= prevents trimming of leading whitespaces.
     while IFS= read -r l; do
       line_number=$((line_number + 1))
       # ${l,,} converts line to lowercase.
       if [[ "${l,,}" =~ $rules_pattern && "$l" =~ $methods_pattern ]]; then
         echo "$f:$line_number:$l"
         echo "$l" | sed -r \
-            "s#$methods_pattern#invoke-static {}, LNoAds;->hook()\\3#" >> \
+            "s/$sed_methods_pattern/invoke-static {}, LNoAds;->hook()\\2/" >> \
             "$TMP_FILE"
 
         hooked=
@@ -64,19 +62,21 @@ rm_ads() {
     if [[ -n ${file_changed+SET} ]]; then
       cat "$TMP_FILE" > "$f"
     fi
-  done <<< "$(grep -rlE "$methods_pattern" "$1/smali"*)"
+  done <<< "$(grep -rlE "$methods_pattern" "$1"/smali*)"
 
   for x in "${!xml_patterns[@]}"; do
-    while read -r f; do
-      if [[ -n $f ]]; then
-        grep -nHiE "$x" "$f"
-        sed -ri "s#$x#${xml_patterns[$x]}#Ig" "$f"
+    sed_search_pattern=${x//\//\\\/}
+    sed_replacement_pattern=${xml_patterns[$x]//\//\\\/}
+
+    while IFS= read -r f; do
+      if grep -snHiE "$x" "$f"; then
+        sed -ri "s/$sed_search_pattern/$sed_replacement_pattern/Ig" "$f"
       fi
-    done <<< "$(grep -liE "$x" "$1/res/layout"*/*.xml)"
+    done <<< "$(grep -liE "$x" "$1"/res/layout*/*.xml)"
   done
 
   if [[ -n ${hooked+SET} ]]; then
     # Add class that contains hooks.
-    cp -v "$DATA_DIR/rm-ads/NoAds.smali" "$1/smali"
+    cp -v "$DATA_DIR/no-ads/NoAds.smali" "$1/smali"
   fi
 }

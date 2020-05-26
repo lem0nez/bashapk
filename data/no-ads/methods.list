@@ -154,7 +154,7 @@ requestAd
 requestBannerAd
 requestInterstitial
 requestInterstitialAd
-ru/boxdigital/sdk/ad/).*->(hasVideoContent
+ru/boxdigital/sdk/ad.*->hasVideoContent
 setNativeAppwallBanner
 setupBanner
 shouldShowInterstitial

@@ -14,13 +14,8 @@
 # limitations under the License.
 
 no_billing() {
-  permission_pattern=`
-      `'<uses-permission\s+.*android:name="com\.android\.vending\.BILLING"'
-
   replace_strings \
       'com\.android\.vending\.billing[^"]*' no-billing true "$1"/smali*
-
-  if grep -nHE "$permission_pattern" "$1/AndroidManifest.xml"; then
-    sed -ri "/$permission_pattern/d" "$1/AndroidManifest.xml"
-  fi
+  del_xml_elements 'uses-permission[[:space:]]+[^>]*android:name='`
+      `'"com\.android\.vending\.BILLING"[^>]*' true "$1/AndroidManifest.xml"
 }

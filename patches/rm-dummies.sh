@@ -14,12 +14,7 @@
 # limitations under the License.
 
 rm_dummies() {
-  pattern='\s+name="APKTOOL_DUMMY_[^"]+"'
-
-  while read -r f; do
-    if [[ -n $f ]]; then
-      grep -nHE "$pattern" "$f"
-      sed -ri "/$pattern/d" "$f"
-    fi
-  done <<< "$(grep -lE "$pattern" "$1"/values/*.xml)"
+  # "Dummies" generate only in the "values" folder.
+  del_xml_elements '[^>]+[[:space:]]+name="APKTOOL_DUMMY_[^"]+"[^>]*' \
+      true "$1"/values/*.xml
 }

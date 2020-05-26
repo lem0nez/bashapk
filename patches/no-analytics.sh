@@ -13,10 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-rm_analytics() {
-  replace_strings "[^\"]*$(get_list_pattern rm-analytics/links.list)[^\"]*" \
-      no-analytics true "$1/smali"*
-  remove_manifest_components \
-      'com\.yandex\.metrica\.[^"]+' "$1/AndroidManifest.xml"
-  # Yes, that's all!
+no_analytics() {
+  replace_strings "[^\"]*$(get_list_pattern no-analytics/links.list)[^\"]*" \
+      no-analytics true "$1"/smali*
+  del_xml_elements '(receiver|service)[[:space:]]+[^>]*android:name='`
+      `'"com\.yandex\.metrica\.[^"]+"[^>]*' false "$1/AndroidManifest.xml"
 }
