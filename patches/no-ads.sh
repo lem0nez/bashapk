@@ -27,42 +27,20 @@ no_ads() {
     ['ca-app-pub']='no-ads'
   )
 
-  # Rules list should contains only lowercase rows!
   rules_pattern=$(get_list_pattern no-ads/rules.list)
-  methods_pattern=`
-      `"invoke-.*$(get_list_pattern no-ads/methods.list)\\(.*\\)(V|Z)"
+  methods_pattern="^(\\s*)invoke-.+$rules_pattern.*"`
+      `"$(get_list_pattern no-ads/methods.list)\\(.*\\)(V|Z)\\s*$"
   sed_methods_pattern=${methods_pattern//\//\\\/}
 
   replace_strings "[^\"]*${rules_pattern}[^\"]*" no-ads false "$1"/smali*
 
   while IFS= read -r f; do
-    if [[ -z $f ]]; then
-      continue
+    if grep -snHiE "$methods_pattern" "$f"; then
+      sed -ri "s/$sed_methods_pattern/"`
+          `"\\1invoke-static {}, LNoAds;->hook()\\4/Ig" "$f"
+      hooked=
     fi
-
-    unset line_number file_changed
-    : > "$TMP_FILE"
-
-    while IFS= read -r l; do
-      line_number=$((line_number + 1))
-      # ${l,,} converts line to lowercase.
-      if [[ "${l,,}" =~ $rules_pattern && "$l" =~ $methods_pattern ]]; then
-        echo "$f:$line_number:$l"
-        echo "$l" | sed -r \
-            "s/$sed_methods_pattern/invoke-static {}, LNoAds;->hook()\\2/" >> \
-            "$TMP_FILE"
-
-        hooked=
-        file_changed=
-      else
-        echo "$l" >> "$TMP_FILE"
-      fi
-    done < "$f"
-
-    if [[ -n ${file_changed+SET} ]]; then
-      cat "$TMP_FILE" > "$f"
-    fi
-  done <<< "$(grep -rlE "$methods_pattern" "$1"/smali*)"
+  done <<< "$(grep -rilE "$methods_pattern" "$1"/smali*)"
 
   for x in "${!xml_patterns[@]}"; do
     sed_search_pattern=${x//\//\\\/}

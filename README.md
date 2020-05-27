@@ -37,6 +37,6 @@ and your screen have the **XHDPI** density, then the following command:
 ```
 rmdupes drawable-xhdpi drawable-xxhdpi drawable-hdpi
 ```
-will delete all founded duplicate graphics, starts with the second folder. How
+will delete all found duplicate graphics, starts with the second folder. How
 to prioritize directories sequence of APK resources you can read
 [here](https://developer.android.com/guide/topics/resources/providing-resources#AlternativeResources).
