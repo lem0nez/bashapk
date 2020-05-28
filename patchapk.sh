@@ -137,17 +137,17 @@ get_list_pattern() {
 # 1. search pattern (make sure that pattern
 #    doesn't match text outside the quotes);
 # 2. replacement pattern;
-# 3. boolean value: true for case sensative search and false otherwise;
+# 3. boolean value: true for case sensitive search and false otherwise;
 # 4. paths.
 replace_strings() {
   search_pattern="([^[:space:]\"]+\\s*)\"$1\"\\s*$"; shift
   replacement_pattern="\\1\"$1\""; shift
-  is_case_sensative=$1; shift
+  is_case_sensitive=$1; shift
 
   sed_search_pattern=${search_pattern//\//\\\/}
   sed_replacement_pattern=${replacement_pattern//\//\\\/}
 
-  if [[ $is_case_sensative == true ]]; then
+  if [[ $is_case_sensitive == true ]]; then
     grep_pattern_options='E'
     sed_flags='g'
   else

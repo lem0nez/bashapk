@@ -17,8 +17,9 @@ KEEP_LANG=en
 
 rm_langs() {
   for d in "$1"/values-*; do
-    if [[ "$d" =~ (-(b\+|)[a-z]{2}(-.+|\+.+|)$) ]] &&
-        [[ ! "$d" =~ (-(|b\+|)$KEEP_LANG(-.+|\+.+|)$) ]]; then
+    # ${d,,} converts value to lowercase.
+    if [[ "${d,,}" =~ (-(b\+|)[a-z]{2}(-.+|\+.+|)$) ]] &&
+        [[ ! "${d,,}" =~ (-(|b\+|)$KEEP_LANG(-.+|\+.+|)$) ]]; then
       if [[ -n ${TRASH_DIR+SET} ]]; then
         mv -v "$d" "$TRASH_DIR"
       else
