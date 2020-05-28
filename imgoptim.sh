@@ -83,7 +83,11 @@ print_help() {
 }
 
 optimize() {
-  while read -r f; do
+  while IFS= read -r f; do
+    if [[ -z $f ]]; then
+      continue
+    fi
+
     if [[ -z ${NO_STATS+SET} ]]; then
       size=$(get_size "$f")
     fi
