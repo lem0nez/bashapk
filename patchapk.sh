@@ -68,11 +68,6 @@ main() {
     exit 1
   fi
 
-  for p in "$SCRIPT_DIR"/patches/*.sh; do
-    # shellcheck --source-path=patches
-    . "$p"
-  done
-
   case $patch in
     rm-langs|rm-debug-info|rm-dummies|no-ads|no-analytics|no-billing)
       provide_dirs= ;;
@@ -80,6 +75,9 @@ main() {
       printf >&2 'Unrecognized patch: %s\n' "$patch"
       exit 1 ;;
   esac
+
+  # shellcheck --source-path=patches
+  . "$SCRIPT_DIR/patches/$patch.sh"
 
   if [[ -n ${provide_dirs+SET} ]]; then
     if [[ -z $1 ]]; then
