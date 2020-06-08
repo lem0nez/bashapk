@@ -142,6 +142,10 @@ replace_strings() {
   replacement_pattern="\\1\"$1\""; shift
   is_case_sensitive=$1; shift
 
+  if [[ -z $* ]]; then
+    return
+  fi
+
   sed_search_pattern=${search_pattern//\//\\\/}
   sed_replacement_pattern=${replacement_pattern//\//\\\/}
 
@@ -172,6 +176,9 @@ del_xml_elements() {
   use_signle_line_matching=$1; shift
 
   if [[ $use_signle_line_matching == true ]]; then
+    if [[ -z $* ]]; then
+      return
+    fi
     sed_pattern=${pattern//\//\\\/}
 
     while IFS= read -r f; do

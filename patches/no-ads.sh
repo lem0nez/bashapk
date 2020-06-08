@@ -31,27 +31,35 @@ no_ads() {
   methods_pattern="^(\\s*)invoke-.+$rules_pattern.*"`
       `"$(get_list_pattern no-ads/methods.list)\\(.*\\)(V|Z)\\s*$"
   sed_methods_pattern=${methods_pattern//\//\\\/}
+  smali_dirs=("$1"/smali*)
 
-  replace_strings "[^\"]*${rules_pattern}[^\"]*" no-ads false "$1"/smali*
-
-  while IFS= read -r f; do
-    if grep -snHiE "$methods_pattern" "$f"; then
-      sed -ri "s/$sed_methods_pattern/"`
-          `"\\1invoke-static {}, LNoAds;->hook()\\4/Ig" "$f"
-      hooked=
-    fi
-  done <<< "$(grep -rilE "$methods_pattern" "$1"/smali*)"
-
-  for x in "${!xml_patterns[@]}"; do
-    sed_search_pattern=${x//\//\\\/}
-    sed_replacement_pattern=${xml_patterns[$x]//\//\\\/}
+  if (( ${#smali_dirs[@]} != 0 )); then
+    replace_strings "[^\"]*${rules_pattern}[^\"]*" no-ads false \
+        "${smali_dirs[@]}"
 
     while IFS= read -r f; do
-      if grep -snHiE "$x" "$f"; then
-        sed -ri "s/$sed_search_pattern/$sed_replacement_pattern/Ig" "$f"
+      if grep -snHiE "$methods_pattern" "$f"; then
+        sed -ri "s/$sed_methods_pattern/"`
+            `"\\1invoke-static {}, LNoAds;->hook()\\4/Ig" "$f"
+        hooked=
       fi
-    done <<< "$(grep -liE "$x" "$1"/res/layout*/*.xml)"
-  done
+    done <<< "$(grep -rilE "$methods_pattern" "${smali_dirs[@]}")"
+  fi
+
+  layouts=("$1"/res/layout*/*.xml)
+
+  if (( ${#layouts[@]} != 0 )); then
+    for x in "${!xml_patterns[@]}"; do
+      sed_search_pattern=${x//\//\\\/}
+      sed_replacement_pattern=${xml_patterns[$x]//\//\\\/}
+
+      while IFS= read -r f; do
+        if grep -snHiE "$x" "$f"; then
+          sed -ri "s/$sed_search_pattern/$sed_replacement_pattern/Ig" "$f"
+        fi
+      done <<< "$(grep -liE "$x" "${layouts[@]}")"
+    done
+  fi
 
   if [[ -n ${hooked+SET} ]]; then
     # Add class that contains hooks.
