@@ -26,8 +26,8 @@ main() {
     exit 0
   fi
 
-  # To avoid splitting of paths that contain whitespace characters.
-  IFS=$'\0'
+  # To avoid splitting of paths.
+  IFS=$'\n'
 
   while [[ -n $1 ]]; do
     for f in "${files[@]}"; do
