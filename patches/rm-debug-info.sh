@@ -17,7 +17,7 @@ rm_debug_info() {
   pattern='^\s*(\.local\s+.+|\.line\s+[[:digit:]]+|\.prologue|'`
       `'\.end\s+local\s+.+|\.restart\s+local\s+.+|\.source\s+.+)\s*$'
 
-  # grep faster than pure Bash patterns and mush faster than find.
+  # grep faster than pure Bash patterns and much faster than find.
   if grep -rlE "$pattern" "$1" | xargs -r sed -ri "/$pattern/d"; then
     printf '%s: done\n' "$1"
   else
