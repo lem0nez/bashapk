@@ -6,10 +6,10 @@ This repository contains various Bash scripts for simplified editing of
 decompiled Android applications.
 
 #### imgoptim
-Optimizes all **PNG** (using `optipng`) and **JPEG** (using `jpegoptim`) files
-from the specified directories recursively. It uses lossless optimization
-options and calculates total freed space. You can disable calculations to speed
-up optimization process.
+Optimizes all specified **PNG** (using `optipng`) and **JPEG** (using
+`jpegoptim`) images, or images from the specified directories recursively. It
+uses lossless optimization options and calculates total freed space. You can
+disable calculations to speed up optimization process.
 
 #### patchapk
 With this script you can apply some of the following patches:

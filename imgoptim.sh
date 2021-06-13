@@ -47,13 +47,13 @@ main() {
   done
 
   if [[ -z $1 ]]; then
-    echo >&2 'Specify at least one directory!'
+    echo >&2 'Specify at least one directory or image!'
     exit 1
   fi
 
   while [[ -n $1 ]]; do
-    if [[ ! -d $1 ]]; then
-      printf >&2 'Directory "%s" does not exist! Skipping...\n' "$1"
+    if [[ ! -e $1 ]]; then
+      printf >&2 '"%s" does not exist! Skipping...\n' "$1"
     else
       optimize "$1"
     fi
@@ -73,7 +73,7 @@ main() {
 }
 
 print_help() {
-  printf 'Usage: %s [options...] [directories...]\n'`
+  printf 'Usage: %s [options...] <directories/images...>\n'`
       `'Options:\n'`
       `'  -h, --help            Print the help message\n'`
       `'  -n, --no-stats        Do not calculate freed space\n'`
