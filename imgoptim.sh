@@ -54,6 +54,8 @@ main() {
   while [[ -n $1 ]]; do
     if [[ ! -e $1 ]]; then
       printf >&2 '"%s" does not exist! Skipping...\n' "$1"
+    elif [[ -f $1 && ! ${1,,} =~ (\.(png|jpe?g)$) ]]; then
+      printf >&2 '"%s" has invalid extension! Skipping...\n' "$1"
     else
       optimize "$1"
     fi
