@@ -33,11 +33,16 @@ main() {
       -l|--list)
         shift
         if [[ -z $1 ]]; then
-          echo >&2 'Specify a file to store the path list!'
+          echo >&2 'Specify a file to append the path list!'
           exit 1
         elif [[ -e $1 ]]; then
-          echo >&2 'The path list file must not exist!'
-          exit 1
+          if [[ -d $1 ]]; then
+            echo >&2 "\"$1\" exists, but it's directory!"
+            exit 1
+          elif [[ ! -w $1 ]]; then
+            echo >&2 "File \"$1\" exists, but it's not writable!"
+            exit 1
+          fi
         fi
         PATH_LIST_FILE=$1 ;;
       -n|--no-stats)
@@ -87,11 +92,12 @@ main() {
 print_help() {
   printf 'Usage: %s [options...] <directories/images...>\n'`
       `'Options:\n'`
-      `'  -h, --help            Print the help message\n'`
-      `'  -l, --list <file>     Create path list of modified images\n'`
-      `'  -n, --no-stats        Do not calculate freed space\n'`
-      `'  -o, --no-optipng      Do not use optipng\n'`
-      `'  -j, --no-jpegoptim    Do not use jpegoptim\n' \
+      `'  -h, --help            Print the help message.\n'`
+      `'  -l, --list <file>     Append the path list of\n'`
+      `'                        modified images to file.\n'`
+      `'  -n, --no-stats        Do not calculate freed space.\n'`
+      `'  -o, --no-optipng      Do not use optipng.\n'`
+      `'  -j, --no-jpegoptim    Do not use jpegoptim.\n' \
       "$0"
 }
 
