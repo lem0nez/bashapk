@@ -57,13 +57,21 @@ main() {
       *)
         break ;;
     esac
-
     shift
   done
 
   if [[ -z $1 ]]; then
     echo >&2 'Specify at least one directory or image!'
     exit 1
+  fi
+
+  if [[ -e $PATH_LIST_FILE ]]; then
+    read -r -p "File \"$PATH_LIST_FILE\" may be modified. Continue (y[es])? " \
+         answer
+    if [[ ! $answer =~ (^y(es)?$) ]]; then
+      echo 'Aborted.'
+      exit 0
+    fi
   fi
 
   while [[ -n $1 ]]; do
@@ -74,7 +82,6 @@ main() {
     else
       optimize "$1"
     fi
-
     shift
   done
 
@@ -90,7 +97,7 @@ main() {
 }
 
 print_help() {
-  printf 'Usage: %s [options...] <directories/images...>\n'`
+  printf 'Usage: %s [options...] <directories / images...>\n'`
       `'Options:\n'`
       `'  -h, --help            Print the help message.\n'`
       `'  -l, --list <file>     Append the path list of\n'`
