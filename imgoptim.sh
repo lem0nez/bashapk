@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright © 2020 Nikita Dudko. All rights reserved.
+# Copyright © 2021 Nikita Dudko. All rights reserved.
 # Contacts: <nikita.dudko.95@gmail.com>
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,7 +18,7 @@
 set -eo pipefail
 
 main() {
-  unset NO_STATS NO_OPTIPNG NO_JPEGOPTIM FREED_BYTES
+  unset PATH_LIST_FILE NO_STATS NO_OPTIPNG NO_JPEGOPTIM FREED_BYTES
 
   if [[ -z $1 ]]; then
     print_help
@@ -30,6 +30,16 @@ main() {
       -h|--help)
         print_help
         exit 0 ;;
+      -l|--list)
+        shift
+        if [[ -z $1 ]]; then
+          echo >&2 'Specify a file to store the path list!'
+          exit 1
+        elif [[ -e $1 ]]; then
+          echo >&2 'The path list file must not exist!'
+          exit 1
+        fi
+        PATH_LIST_FILE=$1 ;;
       -n|--no-stats)
         NO_STATS= ;;
       -o|--no-optipng)
@@ -78,6 +88,7 @@ print_help() {
   printf 'Usage: %s [options...] <directories/images...>\n'`
       `'Options:\n'`
       `'  -h, --help            Print the help message\n'`
+      `'  -l, --list <file>     Create path list of modified images\n'`
       `'  -n, --no-stats        Do not calculate freed space\n'`
       `'  -o, --no-optipng      Do not use optipng\n'`
       `'  -j, --no-jpegoptim    Do not use jpegoptim\n' \
@@ -93,6 +104,9 @@ optimize() {
     if [[ -z ${NO_STATS+SET} ]]; then
       size=$(get_size "$f")
     fi
+    if [[ -n $PATH_LIST_FILE ]]; then
+      modification_time=$(stat -c %Y "$f")
+    fi
 
     # If a file extension starts with 'p' or 'P'...
     if [[ ${f##*.} =~ ^(p|P) ]]; then
@@ -104,6 +118,10 @@ optimize() {
           --strip-iptc --strip-icc --strip-xmp "$f"
     fi
 
+    if [[ -n $PATH_LIST_FILE ]] &&
+        (( $(stat -c %Y "$f") != modification_time )); then
+      echo "$f" >> "$PATH_LIST_FILE"
+    fi
     if [[ -z ${NO_STATS+SET} ]]; then
       FREED_BYTES=$((FREED_BYTES - $(get_size "$f") + size))
     fi
