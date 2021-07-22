@@ -27,13 +27,16 @@ main() {
 
   while [[ -n $1 ]]; do
     case $1 in
-      -h|--help)
-        print_help
-        exit 0 ;;
+      -s|--no-stats)
+        NO_STATS= ;;
+      -o|--no-optipng)
+        NO_OPTIPNG= ;;
+      -j|--no-jpegoptim)
+        NO_JPEGOPTIM= ;;
       -l|--list)
         shift
         if [[ -z $1 ]]; then
-          echo >&2 'Specify a file to append the path list!'
+          echo >&2 'Specify a file to append path list!'
           exit 1
         elif [[ -e $1 ]]; then
           if [[ -d $1 ]]; then
@@ -45,12 +48,9 @@ main() {
           fi
         fi
         PATH_LIST_FILE=$1 ;;
-      -n|--no-stats)
-        NO_STATS= ;;
-      -o|--no-optipng)
-        NO_OPTIPNG= ;;
-      -j|--no-jpegoptim)
-        NO_JPEGOPTIM= ;;
+      -h|--help)
+        print_help
+        exit 0 ;;
       -*)
         printf >&2 'Unrecognized option: %s\n' "$1"
         exit 1 ;;
@@ -63,15 +63,6 @@ main() {
   if [[ -z $1 ]]; then
     echo >&2 'Specify at least one directory or image!'
     exit 1
-  fi
-
-  if [[ -e $PATH_LIST_FILE ]]; then
-    read -r -p "File \"$PATH_LIST_FILE\" may be modified. Continue (y[es])? " \
-         answer
-    if [[ ! $answer =~ (^y(es)?$) ]]; then
-      echo 'Aborted.'
-      exit 0
-    fi
   fi
 
   while [[ -n $1 ]]; do
@@ -94,18 +85,6 @@ main() {
   fi
 
   exit 0
-}
-
-print_help() {
-  printf 'Usage: %s [options...] <directories / images...>\n'`
-      `'Options:\n'`
-      `'  -h, --help            Print the help message.\n'`
-      `'  -l, --list <file>     Append the path list of\n'`
-      `'                        modified images to file.\n'`
-      `'  -n, --no-stats        Do not calculate freed space.\n'`
-      `'  -o, --no-optipng      Do not use optipng.\n'`
-      `'  -j, --no-jpegoptim    Do not use jpegoptim.\n' \
-      "$0"
 }
 
 optimize() {
@@ -143,6 +122,19 @@ optimize() {
 
 get_size() {
   du -b "$1" | cut -f1
+}
+
+print_help() {
+  printf 'Usage: %s [options...] <directories / images...>\n'`
+        `'Options:\n'`
+        `'  -s, --no-stats        Do not calculate freed space.\n'`
+        `'  -o, --no-optipng      Do not use optipng.\n'`
+        `'  -j, --no-jpegoptim    Do not use jpegoptim.\n'`
+        `'\n'`
+        `'  -l, --list <file>     Append path list of\n'`
+        `'                        modified images to a file.\n'`
+        `'  -h, --help            Print the help message.\n' \
+        "$0"
 }
 
 main "$@"
