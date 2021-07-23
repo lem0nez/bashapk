@@ -76,9 +76,9 @@ main() {
   readonly PATH_LIST_FILE
 
   if [[ -z $2 ]]; then
-    echo -e \
-        'Specify at least two directories from highest to lowest\n'`
-        `'priority. Notice, that directories must contain only files.'
+    echo >&2 -e \
+        "Specify at least two directories, from highest to lowest\n"`
+       `"priority. Notice, that subdirectories won't be removed."
     exit 1
   fi
 
@@ -158,11 +158,12 @@ rmdupes() {
     # Pattern of XML entries with paths that will be deleted.
     local paths_xml_pattern
 
-    # Number of matched path entries of removed files.
+    # Number of matched path entries of removed
+    # files for the processed directory.
     local -i matched_path_entries
-    # If number of removed files and deleted path entries
-    # don't match, then a warning will be displayed.
-    local warn_about_path_entries_count
+    # If number of deleted path entries less that number
+    # of removed files, then a warning will be displayed.
+    local not_all_paths_found
   fi
 
   while [[ -n $1 ]]; do
@@ -198,8 +199,8 @@ rmdupes() {
       echo "Matched path entries: $matched_path_entries"
       sed -ri "/$paths_xml_pattern/d" "${res_paths_files[@]}"
 
-      if (( matched_path_entries != ${#dir_rm_paths[@]} )); then
-        warn_about_path_entries_count=1
+      if (( matched_path_entries < ${#dir_rm_paths[@]} )); then
+        not_all_paths_found=1
       fi
     fi
 
@@ -219,7 +220,7 @@ rmdupes() {
         if [[ -d $f ]]; then
           echo "Directory \"$filename\" skipped"
         elif [[ ! "$IFS${files[*]}$IFS" =~ $IFS$filename$IFS ]]; then
-          # Add a file name that is not in the "files" array.
+          # Add a file name that is not in the files array.
           files+=("$filename")
         fi
       done
@@ -237,7 +238,7 @@ rmdupes() {
   if [[ -n $RES_PATHS_DIR ]]; then
     local -a empty_arsc_files
     mapfile -t empty_arsc_files < \
-        <(grep -lzP '\n<resources>\n</resources>\n?$' "${res_paths_files[@]}")
+        <(grep -lzP '<resources>\s*</resources>\s*$' "${res_paths_files[@]}")
 
     if (( ${#empty_arsc_files[@]} != 0 )); then
       echo -e "\nRemoving empty resources.arsc's files:"
@@ -249,9 +250,8 @@ rmdupes() {
 
     echo -e "$rm_dirs_msg\n"`
            `"Removed resources.arsc's files: ${#empty_arsc_files[@]}"
-    if [[ -n $warn_about_path_entries_count ]]; then
-      echo -e "\nWarning: number of removed files "`
-             `"and deleted path entries don't match"
+    if [[ -n $not_all_paths_found ]]; then
+      echo -e "\nWarning: not all resource paths found in XML entries!"
     fi
   else
     echo -e "$rm_dirs_msg"

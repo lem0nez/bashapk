@@ -40,3 +40,18 @@ rmdupes drawable-xhdpi drawable-xxhdpi drawable-hdpi
 will delete all found duplicate graphics, starts with the second folder. How
 to prioritize directories sequence of APK resources you can read
 [here](https://developer.android.com/guide/topics/resources/providing-resources#AlternativeResources).
+
+#### rmdupes-arsc
+Removes duplicate resources from the specified XML files. This files must be
+decompiled by MT Manager from the `resources.arsc` file. For instance, if you
+have following XML files:
+```
+style.xml
+style-v21.xml
+style-v28.xml
+```
+and your Android version is **5.1** (API 22), then to delete unnecessary
+duplicate resources you should use following command:
+```
+rmdupes-arsc style-v21.xml style.xml style-v28.xml
+```
