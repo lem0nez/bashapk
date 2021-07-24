@@ -101,7 +101,7 @@ rmdupes() {
                                 "${part_names[@]/#/\"or@name=\"}")
         xpaths+=("/resources/*[@name=\"$attr_vals\"]")
       done
-    elif ! xmlstarlet sel -t -v '/resources/*[1]' "$file"; then
+    elif ! xmlstarlet sel -t -v 'name(/*/*[1])' "$file"; then
       rm "$file"
       echo -n ': file removed'
     fi

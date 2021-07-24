@@ -23,6 +23,7 @@ IFS=$'\n'
 declare PATH_LIST_FILE
 # A directory that contains XML files with paths to resources.
 declare RES_PATHS_DIR
+declare IGNORE_FILE_EXT
 
 main() {
   if [[ -z $1 ]]; then
@@ -62,6 +63,8 @@ main() {
         fi
         # Trim all trailing slashes.
         arsc_dir=${1%${1##*[!/]}} ;;
+      -i|--ignore-extension)
+        IGNORE_FILE_EXT=1 ;;
       -h|--help)
         print_help
         exit 0 ;;
@@ -73,7 +76,7 @@ main() {
     esac
     shift
   done
-  readonly PATH_LIST_FILE
+  readonly PATH_LIST_FILE IGNORE_FILE_EXT
 
   if [[ -z $2 ]]; then
     echo >&2 -e \
@@ -173,11 +176,20 @@ rmdupes() {
     echo -en "\n$dir: "
 
     for f in "${files[@]}"; do
-      # A file already exists in directory with highest priority?
-      if [[ -f $dir/$f ]]; then
-        rm "$dir/$f"
-        dir_rm_paths+=("$dir/$f")
+      dir_files=("$dir/$f")
+      if [[ -n $IGNORE_FILE_EXT ]]; then
+        # Match from the first dot to support
+        # multidot extensions (such as .9.png).
+        dir_files+=("$dir/$f".*)
       fi
+
+      for p in "${dir_files[@]}"; do
+        # A file already exists in directory with highest priority?
+        if [[ -f $p ]]; then
+          rm "$p"
+          dir_rm_paths+=("$p")
+        fi
+      done
     done
 
     echo -n "${#dir_rm_paths[@]} file"
@@ -219,7 +231,12 @@ rmdupes() {
         filename=${f##*/}
         if [[ -d $f ]]; then
           echo "Directory \"$filename\" skipped"
-        elif [[ ! "$IFS${files[*]}$IFS" =~ $IFS$filename$IFS ]]; then
+        fi
+
+        if [[ -n $IGNORE_FILE_EXT ]]; then
+          filename=${filename%%.*}
+        fi
+        if [[ ! "$IFS${files[*]}$IFS" =~ $IFS$filename$IFS ]]; then
           # Add a file name that is not in the files array.
           files+=("$filename")
         fi
@@ -238,7 +255,8 @@ rmdupes() {
   if [[ -n $RES_PATHS_DIR ]]; then
     local -a empty_arsc_files
     mapfile -t empty_arsc_files < \
-        <(grep -lzP '<resources>\s*</resources>\s*$' "${res_paths_files[@]}")
+        <(grep -lzP '(<resources>\s*</resources>|<resources/>)\s*$' \
+                    "${res_paths_files[@]}")
 
     if (( ${#empty_arsc_files[@]} != 0 )); then
       echo -e "\nRemoving empty resources.arsc's files:"
@@ -266,7 +284,9 @@ print_help() {
         `'                       by MT Manager resources.arsc file;\n'`
         `'                       entries with corresponding paths\n'`
         `'                       will be removed from XML files.\n'`
-        `'  -h, --help           Print this message and exit.\n' \
+        `'\n'`
+        `'  -i, --ignore-extension    Ignore file extensions.\n'`
+        `'  -h, --help                Print this message and exit.\n' \
         "$0"
 }
 
