@@ -1,4 +1,4 @@
-# Copyright © 2020 Nikita Dudko. All rights reserved.
+# Copyright © 2021 Nikita Dudko. All rights reserved.
 # Contacts: <nikita.dudko.95@gmail.com>
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,6 +16,13 @@
 no_analytics() {
   replace_strings "[^\"]*$(get_list_pattern no-analytics/links.list)[^\"]*" \
       no-analytics true "$1"/smali*
-  del_xml_elements '(receiver|service)[[:space:]]+[^>]*android:name='`
-      `'"com\.yandex\.metrica\.[^"]+"[^>]*' false "$1/AndroidManifest.xml"
+
+  if [[ -n ${USE_XMLSTARLET+SET} ]]; then
+    xmlstarlet_del '/manifest/application/*[self::receiver or self::service]'`
+                  `'[starts-with(@android:name, "com.yandex.metrica.")]' \
+                  "$1/AndroidManifest.xml"
+  else
+    del_xml_elements '(receiver|service)[[:space:]]+[^>]*android:name='`
+        `'"com\.yandex\.metrica\.[^"]+"[^>]*' false "$1/AndroidManifest.xml"
+  fi
 }

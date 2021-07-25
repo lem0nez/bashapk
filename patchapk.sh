@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright © 2020 Nikita Dudko. All rights reserved.
+# Copyright © 2021 Nikita Dudko. All rights reserved.
 # Contacts: <nikita.dudko.95@gmail.com>
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,6 +18,10 @@
 set -eo pipefail
 shopt -s globstar nullglob
 
+# Number of spaces to indent. Used by formatter, which is called
+# if a XML file was modified and xmlstarlet is selected as editor.
+XML_INDENT_SIZE=4
+
 TMP_FILE=$(mktemp -t tmp.patchapk-XXXXXX)
 cleanup() {
   rm -f "$TMP_FILE"
@@ -25,7 +29,7 @@ cleanup() {
 trap cleanup EXIT
 
 main() {
-  unset TRASH_DIR
+  unset TRASH_DIR USE_XMLSTARLET
 
   SCRIPT_DIR="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
   DATA_DIR="$SCRIPT_DIR/data"
@@ -53,6 +57,13 @@ main() {
           exit 1
         fi
         TRASH_DIR=$1 ;;
+      -x|--use-xmlstarlet)
+        if ! command -v xmlstarlet &>/dev/null; then
+          echo >&2 'xmlstarlet not found! '`
+                  `'Please install it or update the PATH variable'
+          exit 1
+        fi
+        USE_XMLSTARLET= ;;
       -*)
         printf >&2 'Unrecognized option: %s\n' "$1"
         exit 1 ;;
@@ -76,7 +87,7 @@ main() {
       exit 1 ;;
   esac
 
-  # shellcheck --source-path=patches
+  # shellcheck source=/dev/null
   . "$SCRIPT_DIR/patches/$patch.sh"
 
   if [[ -n ${provide_dirs+SET} ]]; then
@@ -103,8 +114,9 @@ print_help() {
   printf 'Usage: %s [options...] [patch] ...\n'`
       `'\n'`
       `'Options:\n'`
-      `'  -h, --help           Print the help message\n'`
-      `'  -t, --trash [dir]    Set a directory for trash\n'`
+      `'  -h, --help              Print the help message\n'`
+      `'  -t, --trash [dir]       Set a directory for trash\n'`
+      `'  -x, --use-xmlstarlet    Use xmlstarlet to work with XML files\n'`
       `'\n'`
       `'Patches:\n'`
       `'  rm-langs [resources...]      Remove languages that does not match\n'`
@@ -234,6 +246,25 @@ del_xml_elements() {
     fi
 
     shift
+  done
+}
+
+# Function takes a XPath and file paths.
+xmlstarlet_del() {
+  local -r xpath=$1
+  shift
+  local -ra files=("$@")
+  local match
+
+  for f in "${files[@]}"; do
+    if ! match=$(xmlstarlet sel -t -c "$xpath" "$f"); then
+      continue
+    fi
+    echo "$f:$match"
+
+    xmlstarlet ed -P -L -d "$xpath" "$f"
+    # shellcheck disable=SC2005
+    echo "$(xmlstarlet fo -s "$XML_INDENT_SIZE" "$f")" > "$f"
   done
 }
 

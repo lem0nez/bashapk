@@ -1,4 +1,4 @@
-# Copyright © 2020 Nikita Dudko. All rights reserved.
+# Copyright © 2021 Nikita Dudko. All rights reserved.
 # Contacts: <nikita.dudko.95@gmail.com>
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,6 +16,13 @@
 no_billing() {
   replace_strings \
       'com\.android\.vending\.billing[^"]*' no-billing true "$1"/smali*
-  del_xml_elements 'uses-permission[[:space:]]+[^>]*android:name='`
-      `'"com\.android\.vending\.BILLING"[^>]*' true "$1/AndroidManifest.xml"
+
+  if [[ -n ${USE_XMLSTARLET+SET} ]]; then
+    xmlstarlet_del '/manifest/uses-permission'`
+                  `'[@android:name = "com.android.vending.BILLING"]' \
+                  "$1/AndroidManifest.xml"
+  else
+    del_xml_elements 'uses-permission[[:space:]]+[^>]*android:name='`
+        `'"com\.android\.vending\.BILLING"[^>]*' true "$1/AndroidManifest.xml"
+  fi
 }

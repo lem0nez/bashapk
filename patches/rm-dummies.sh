@@ -1,4 +1,4 @@
-# Copyright © 2020 Nikita Dudko. All rights reserved.
+# Copyright © 2021 Nikita Dudko. All rights reserved.
 # Contacts: <nikita.dudko.95@gmail.com>
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,7 +14,12 @@
 # limitations under the License.
 
 rm_dummies() {
-  # "Dummies" generate only in the "values" folder.
-  del_xml_elements '[^>]+[[:space:]]+name="APKTOOL_DUMMY_[^"]+"[^>]*' \
-      true "$1"/values/*.xml
+  if [[ -n ${USE_XMLSTARLET+SET} ]]; then
+    # "Dummies" generate only in the "values" folder.
+    xmlstarlet_del '/resources/*[starts-with(@name, "APKTOOL_DUMMY_")]' \
+        "$1"/values/*.xml
+  else
+    del_xml_elements '[^>]+[[:space:]]+name="APKTOOL_DUMMY_[^"]+"[^>]*' \
+        true "$1"/values/*.xml
+  fi
 }

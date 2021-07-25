@@ -62,7 +62,7 @@ rmdupes() {
   echo 'Processing resources:'
   while [[ -n $1 ]]; do
     file=$1
-    echo -n " - ${file##*/}"
+    echo -n " - $file"
     res_count=$(xmlstarlet sel -t -v 'count(/resources/*/@name)' "$file")
 
     for p in "${xpaths[@]}"; do
